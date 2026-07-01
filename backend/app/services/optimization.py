@@ -127,7 +127,7 @@ class OptimizationService:
                 resource=res_payload,
                 metrics=metrics_payload,
                 pricing={"unit_price_hourly": 0.045},  # Default pricing fallback
-                historical_billing=db_billing
+                historical_billing=list(db_billing)
             )
 
             # 3. Evaluate rules

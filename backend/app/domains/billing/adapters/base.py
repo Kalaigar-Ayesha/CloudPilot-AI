@@ -35,6 +35,10 @@ class BillingProvider(ABC):
         """Initializes provider credentials."""
         pass
 
+    def disconnect(self) -> None:
+        """Closes provider API sessions and connections."""
+        pass
+
     @abstractmethod
     def validate(self) -> bool:
         """Runs validation checks on billing session scopes."""

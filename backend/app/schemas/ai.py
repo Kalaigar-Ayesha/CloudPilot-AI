@@ -1,7 +1,7 @@
 from datetime import datetime
 import uuid
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class MessageIn(BaseModel):
@@ -20,8 +20,7 @@ class MessageOut(BaseModel):
     citations: Optional[Dict[str, Any]] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ConversationOut(BaseModel):
@@ -32,8 +31,7 @@ class ConversationOut(BaseModel):
     pinned: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ConversationConnect(BaseModel):
@@ -62,5 +60,4 @@ class ScheduledReportOut(BaseModel):
     status: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

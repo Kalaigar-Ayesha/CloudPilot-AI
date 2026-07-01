@@ -32,12 +32,12 @@ class AzureMonitorAdapter(MonitoringAdapter):
     def connect(self, endpoint_url: str, credentials: Dict[str, Any]) -> None:
         try:
             self._subscription_id = credentials["subscription_id"]
-            self._credential = ClientSecretCredential(
+            self._credential = ClientSecretCredential(  # type: ignore
                 tenant_id=credentials["tenant_id"],
                 client_id=credentials["client_id"],
                 client_secret=credentials["client_secret"]
             )
-            self._client = MonitorManagementClient(self._credential, self._subscription_id)
+            self._client = MonitorManagementClient(self._credential, self._subscription_id)  # type: ignore
         except Exception as e:
             raise ProviderException(f"Failed to authenticate Azure Monitor: {str(e)}")
 
@@ -102,13 +102,14 @@ class AzureMonitorAdapter(MonitoringAdapter):
             points = []
             for metric in metrics_data.value:
                 for timeseries in metric.timeseries:
-                    for data in timeseries.data:
+                    for data in (timeseries.data or []):
                         if data.average is not None:
+                            unit_str = getattr(metric.unit, "value", str(metric.unit or "percent"))
                             points.append(
                                 MetricDataPoint(
                                     timestamp=data.time_stamp,
                                     value=float(data.average),
-                                    unit=metric.unit.value if metric.unit else "percent"
+                                    unit=unit_str
                                 )
                             )
             return points

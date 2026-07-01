@@ -40,8 +40,11 @@ class GCPProviderAdapter(CloudProviderAdapter):
             if isinstance(service_account_info, str):
                 service_account_info = json.loads(service_account_info)
                 
-            self._project_id = service_account_info["project_id"]
-            self._credentials = service_account.Credentials.from_service_account_info(
+            if not service_account_info or not isinstance(service_account_info, dict):
+                raise AuthenticationException("GCP service account JSON is invalid or missing.")
+                
+            self._project_id = service_account_info.get("project_id")
+            self._credentials = service_account.Credentials.from_service_account_info(  # type: ignore
                 service_account_info
             )
         except Exception as e:
@@ -52,7 +55,7 @@ class GCPProviderAdapter(CloudProviderAdapter):
             raise AuthenticationException("GCP credentials are not initialized.")
         try:
             # Query GCP zones to verify authentication credentials
-            zone_client = compute_v1.ZonesClient(credentials=self._credentials)
+            zone_client = compute_v1.ZonesClient(credentials=self._credentials)  # type: ignore
             zone_client.list(project=self._project_id)
             return True
         except Exception as e:
@@ -70,7 +73,7 @@ class GCPProviderAdapter(CloudProviderAdapter):
         resources = []
         try:
             # Query instance zones using VM lists API
-            instance_client = compute_v1.InstancesClient(credentials=self._credentials)
+            instance_client = compute_v1.InstancesClient(credentials=self._credentials)  # type: ignore
             instances = instance_client.aggregated_list(project=self._project_id)
             
             for zone, instances_in_zone in instances:
@@ -112,7 +115,7 @@ class GCPProviderAdapter(CloudProviderAdapter):
         if not self._credentials:
             raise ProviderException("GCP credentials uninitialized.")
         try:
-            region_client = compute_v1.RegionsClient(credentials=self._credentials)
+            region_client = compute_v1.RegionsClient(credentials=self._credentials)  # type: ignore
             regions = region_client.list(project=self._project_id)
             return [
                 {

@@ -74,7 +74,7 @@ class Settings(BaseSettings):
 
 
 # Instantiate settings instance
-settings = Settings()
+settings = Settings()  # type: ignore
 
 # Global Redis Mocking when real Redis is unavailable
 try:

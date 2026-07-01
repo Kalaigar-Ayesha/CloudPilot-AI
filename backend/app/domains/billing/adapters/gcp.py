@@ -41,11 +41,14 @@ class GCPBillingProvider(BillingProvider):
             if isinstance(service_account_info, str):
                 service_account_info = json.loads(service_account_info)
                 
-            self._project_id = service_account_info["project_id"]
-            self._credentials = service_account.Credentials.from_service_account_info(
+            if not service_account_info or not isinstance(service_account_info, dict):
+                raise ProviderException("GCP service account JSON is invalid or missing.")
+                
+            self._project_id = service_account_info.get("project_id")
+            self._credentials = service_account.Credentials.from_service_account_info(  # type: ignore
                 service_account_info
             )
-            self._client = billing_v1.CloudBillingClient(credentials=self._credentials)
+            self._client = billing_v1.CloudBillingClient(credentials=self._credentials)  # type: ignore
         except Exception as e:
             raise ProviderException(f"Failed to authenticate GCP Billing: {str(e)}")
 
@@ -100,10 +103,13 @@ class GCPPricingProvider(PricingProvider):
             if isinstance(service_account_info, str):
                 service_account_info = json.loads(service_account_info)
                 
-            self._credentials = service_account.Credentials.from_service_account_info(
+            if not service_account_info or not isinstance(service_account_info, dict):
+                raise ProviderException("GCP service account JSON is invalid or missing.")
+                
+            self._credentials = service_account.Credentials.from_service_account_info(  # type: ignore
                 service_account_info
             )
-            self._client = billing_v1.CloudCatalogClient(credentials=self._credentials)
+            self._client = billing_v1.CloudCatalogClient(credentials=self._credentials)  # type: ignore
         except Exception as e:
             raise ProviderException(f"Failed to authenticate GCP Catalog: {str(e)}")
 

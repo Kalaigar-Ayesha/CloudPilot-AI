@@ -20,12 +20,12 @@ ROLE_PERMISSIONS = {
         "connect_provider", "disconnect_provider", "view_costs", "view_inventory",
         "apply_optimization", "dismiss_optimization", "read_chat", "write_chat",
         "export_reports", "manage_users", "view_audit_logs", "view_optimization",
-        "view_billing", "run_copilot"
+        "view_billing", "run_copilot", "run_optimization"
     },
     "operator": {
         "connect_provider", "view_costs", "view_inventory",
         "apply_optimization", "dismiss_optimization", "read_chat", "write_chat",
-        "export_reports", "view_optimization", "view_billing", "run_copilot"
+        "export_reports", "view_optimization", "view_billing", "run_copilot", "run_optimization"
     },
     "billing_admin": {
         "view_costs", "view_inventory", "read_chat", "write_chat", "export_reports",

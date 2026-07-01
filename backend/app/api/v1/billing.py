@@ -189,6 +189,9 @@ async def get_resource_pricing_catalog(
         return {"status": "error", "message": "Resource not found.", "data": None, "errors": ["Resource not found"]}
 
     account = await cloud_account_repository.get(db, res.cloud_account_id)
+    if not account:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Cloud account not found")
     
     # Query pricing record by resolved SKU
     from sqlalchemy import select

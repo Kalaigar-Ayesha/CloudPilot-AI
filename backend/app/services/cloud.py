@@ -86,7 +86,7 @@ class CloudAccountService:
         
         # Trigger dynamic Celery background sync task after committing
         from app.workers.tasks.discovery import discover_resources_task
-        discover_resources_task.delay(str(db_account.id))
+        discover_resources_task.delay(str(db_account.id))  # type: ignore
 
         return db_account
 

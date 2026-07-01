@@ -31,7 +31,7 @@ async def start_conversation(
     db: AsyncSession = Depends(get_db)
 ):
     """Creates a new conversation thread."""
-    conv = await AIService.start_conversation(db, payload.project_id, payload.title)
+    conv = await AIService.start_conversation(db, payload.project_id, payload.title or "New Conversation")
     await db.commit()
     return {
         "status": "success",

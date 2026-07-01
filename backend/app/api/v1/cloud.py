@@ -87,9 +87,9 @@ async def get_cloud_accounts(
 async def get_cloud_providers():
     """Lists supported cloud platform integrations."""
     providers = [
-        {"id": "aws", "name": "Amazon Web Services", "is_active": true},
-        {"id": "azure", "name": "Microsoft Azure", "is_active": true},
-        {"id": "gcp", "name": "Google Cloud Platform", "is_active": true}
+        {"id": "aws", "name": "Amazon Web Services", "is_active": True},
+        {"id": "azure", "name": "Microsoft Azure", "is_active": True},
+        {"id": "gcp", "name": "Google Cloud Platform", "is_active": True}
     ]
     return {
         "status": "success",

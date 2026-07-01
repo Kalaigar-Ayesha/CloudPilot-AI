@@ -29,7 +29,7 @@ class ResourceMetric(Base):
     __tablename__ = "resource_metrics"
 
     # Primary key is composite (id, timestamp) for partitioning
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)  # type: ignore[override]
     resource_id: Mapped[uuid.UUID] = mapped_column(nullable=False, index=True)
     metric_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     timestamp: Mapped[datetime] = mapped_column(

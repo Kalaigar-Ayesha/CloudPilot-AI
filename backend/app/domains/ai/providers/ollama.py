@@ -70,6 +70,8 @@ class OllamaProvider(LLMProvider):
         return text[:100] + "..."
 
     def health_check(self) -> bool:
+        if not self._client:
+            return False
         try:
             resp = self._client.get("/")
             return resp.status_code == 200

@@ -52,6 +52,8 @@ class PrometheusAdapter(MonitoringAdapter):
         self._endpoint_url = None
 
     def health_check(self) -> str:
+        if not self._client:
+            return "unhealthy"
         try:
             resp = self._client.get("/-/healthy")
             return "healthy" if resp.status_code == 200 else "unhealthy"

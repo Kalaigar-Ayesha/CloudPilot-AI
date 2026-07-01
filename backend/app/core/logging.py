@@ -24,8 +24,9 @@ class JSONFormatter(logging.Formatter):
         }
         
         # Capture extra fields passed to logger
-        if hasattr(record, "extra") and isinstance(record.extra, dict):
-            log_data.update(record.extra)
+        extra = getattr(record, "extra", None)
+        if extra and isinstance(extra, dict):
+            log_data.update(extra)
 
         if record.exc_info:
             log_data["exception"] = self.formatException(record.exc_info)

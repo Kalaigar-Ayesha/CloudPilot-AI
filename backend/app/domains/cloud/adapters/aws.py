@@ -1,12 +1,12 @@
 import logging
 from typing import Any, Dict, List
 try:
-    import boto3
-    from botocore.exceptions import BotoCoreError, ClientError
+    import boto3  # type: ignore
+    from botocore.exceptions import BotoCoreError, ClientError  # type: ignore
 except ImportError:
-    boto3 = None
-    class BotoCoreError(Exception): pass
-    class ClientError(Exception): pass
+    boto3 = None  # type: ignore
+    class BotoCoreError(Exception): pass  # type: ignore
+    class ClientError(Exception): pass  # type: ignore
 
 from app.domains.cloud.adapters.base import (
     CloudProviderAdapter,
@@ -37,26 +37,27 @@ class AWSProviderAdapter(CloudProviderAdapter):
             # Handle IAM Role ARN assumption patterns or Access Keys
             if "role_arn" in credentials:
                 # STS role assumption (standard enterprise pattern)
-                sts = boto3.client("sts")
+                sts = boto3.client("sts")  # type: ignore
                 assumed_role = sts.assume_role(
                     RoleArn=credentials["role_arn"],
                     RoleSessionName="CloudPilotDiscoverySession",
                     ExternalId=credentials.get("external_id")
                 )
                 creds = assumed_role["Credentials"]
-                self._session = boto3.Session(
+                self._session = boto3.Session(  # type: ignore
                     aws_access_key_id=creds["AccessKeyId"],
                     aws_secret_access_key=creds["SecretAccessKey"],
                     aws_session_token=creds["SessionToken"]
                 )
             else:
                 # Direct access keys
-                self._session = boto3.Session(
+                self._session = boto3.Session(  # type: ignore
                     aws_access_key_id=credentials["access_key"],
                     aws_secret_access_key=credentials["secret_key"],
                     aws_session_token=credentials.get("session_token")
                 )
-            self._sts_client = self._session.client("sts")
+            if self._session:
+                self._sts_client = self._session.client("sts")  # type: ignore
         except Exception as e:
             raise AuthenticationException(f"Failed to establish AWS Session: {str(e)}")
 
@@ -76,7 +77,7 @@ class AWSProviderAdapter(CloudProviderAdapter):
         self._config = None
 
     def discover_resources(self) -> List[NormalizedResourceDTO]:
-        if not self._session:
+        if not self._session or not self._config:
             raise ProviderException("AWS Session is uninitialized.")
 
         resources = []
@@ -93,7 +94,11 @@ class AWSProviderAdapter(CloudProviderAdapter):
                             continue
                             
                         # Tag normalization
-                        tags = {t["Key"]: t["Value"] for t in inst.get("Tags", [])}
+                        tags: Dict[str, str] = {
+                            t.get("Key", ""): t.get("Value", "")
+                            for t in inst.get("Tags", [])
+                            if t.get("Key")
+                        }
                         
                         spec = {
                             "instance_type": inst.get("InstanceType"),
@@ -103,13 +108,15 @@ class AWSProviderAdapter(CloudProviderAdapter):
                             "lifecycle": "SPOT" if inst.get("InstanceLifecycle") == "spot" else "ON_DEMAND"
                         }
                         
+                        instance_id = inst.get("InstanceId") or ""
+                        
                         resources.append(
                             NormalizedResourceDTO(
-                                external_id=inst["InstanceId"],
-                                name=tags.get("Name", inst["InstanceId"]),
+                                external_id=instance_id,
+                                name=tags.get("Name") or instance_id,
                                 resource_type="virtual_machine",
                                 region=region,
-                                status=inst["State"]["Name"],
+                                status=inst.get("State", {}).get("Name") or "unknown",
                                 tags=tags,
                                 specification=spec,
                                 raw_payload=inst

@@ -44,7 +44,7 @@ def conversation_cleanup_task(self) -> str:
             m_res = await session.execute(q_msg)
             
             await session.commit()
-            return f"Purged conversation entries: threads ({c_res.rowcount}), messages ({m_res.rowcount})."
+            return f"Purged conversation entries: threads ({c_res.rowcount}), messages ({m_res.rowcount})."  # type: ignore
 
     try:
         result = run_async(execute_cleanup())

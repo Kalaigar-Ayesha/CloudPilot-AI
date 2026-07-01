@@ -1,7 +1,7 @@
 from datetime import datetime
 import uuid
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class CloudAccountConnect(BaseModel):
@@ -36,8 +36,7 @@ class CloudAccountOut(BaseModel):
     status: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RegionInfoOut(BaseModel):
@@ -65,5 +64,4 @@ class NormalizedResourceOut(BaseModel):
     tags: Dict[str, str]
     specification: Dict[str, Any]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

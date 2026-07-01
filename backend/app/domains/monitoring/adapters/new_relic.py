@@ -81,7 +81,7 @@ class NewRelicAdapter(MonitoringAdapter):
         """
         
         variables = {
-            "accountId": int(self._account_id),
+            "accountId": int(self._account_id) if self._account_id is not None else 0,
             "nrql": query
         }
 

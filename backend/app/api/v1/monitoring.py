@@ -1,5 +1,8 @@
+import logging
 import uuid
 from typing import List
+
+logger = logging.getLogger("app.api.v1.monitoring")
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -185,8 +188,7 @@ async def get_resource_metrics(
         await db.commit()
     except Exception as e:
         # Log error but fallback to local database results
-        router.logger = router.logger if hasattr(router, "logger") else logger
-        router.logger.warning(f"Failed to sync fresh resource metrics: {str(e)}")
+        logger.warning(f"Failed to sync fresh resource metrics: {str(e)}")
 
     # Load from DB
     records = await metric_repository.get_metrics(db, id, metric_type, start_time, end_time)

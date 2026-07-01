@@ -36,11 +36,14 @@ class GCPMonitorAdapter(MonitoringAdapter):
             if isinstance(service_account_info, str):
                 service_account_info = json.loads(service_account_info)
                 
-            self._project_id = service_account_info["project_id"]
-            self._credentials = service_account.Credentials.from_service_account_info(
+            if not service_account_info or not isinstance(service_account_info, dict):
+                raise ProviderException("GCP service account JSON is invalid or missing.")
+                
+            self._project_id = service_account_info.get("project_id")
+            self._credentials = service_account.Credentials.from_service_account_info(  # type: ignore
                 service_account_info
             )
-            self._client = monitoring_v3.MetricServiceClient(credentials=self._credentials)
+            self._client = monitoring_v3.MetricServiceClient(credentials=self._credentials)  # type: ignore
         except Exception as e:
             raise ProviderException(f"Failed to authenticate GCP Monitor: {str(e)}")
 
@@ -51,7 +54,7 @@ class GCPMonitorAdapter(MonitoringAdapter):
             # list descriptors call check
             self._client.list_monitored_resource_descriptors(
                 name=f"projects/{self._project_id}",
-                page_size=1
+                page_size=1  # type: ignore
             )
             return True
         except Exception as e:
@@ -98,7 +101,7 @@ class GCPMonitorAdapter(MonitoringAdapter):
         # Full filter specifying instance ID resource target
         full_filter = f'{metric_filter} AND resource.label.instance_id = "{resource_id}"'
 
-        interval = monitoring_v3.TimeInterval(
+        interval = monitoring_v3.TimeInterval(  # type: ignore
             {
                 "end_time": {"seconds": int(end_time.timestamp())},
                 "start_time": {"seconds": int(start_time.timestamp())}
@@ -111,7 +114,7 @@ class GCPMonitorAdapter(MonitoringAdapter):
                     "name": f"projects/{self._project_id}",
                     "filter": full_filter,
                     "interval": interval,
-                    "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL
+                    "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL  # type: ignore
                 }
             )
             
@@ -120,7 +123,7 @@ class GCPMonitorAdapter(MonitoringAdapter):
                 for point in series.points:
                     points.append(
                         MetricDataPoint(
-                            timestamp=point.interval.end_time.to_datetime(),
+                            timestamp=point.interval.end_time.to_datetime(),  # type: ignore
                             value=float(point.value.double_value),
                             unit="percent"
                         )

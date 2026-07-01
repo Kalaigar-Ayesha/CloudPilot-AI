@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 # Fallback imports or dynamic imports checking
 try:
     from azure.identity import ClientSecretCredential
-    from azure.mgmt.resource import SubscriptionClient
+    from azure.mgmt.subscription import SubscriptionClient
     from azure.mgmt.compute import ComputeManagementClient
 except ImportError:
     # Set mock classes if azure packages are not installed in testing environments
@@ -39,7 +39,7 @@ class AzureProviderAdapter(CloudProviderAdapter):
         try:
             self._subscription_id = creds["subscription_id"]
             # Connect via client secret credentials (standard Active Directory app registrations)
-            self._credential = ClientSecretCredential(
+            self._credential = ClientSecretCredential(  # type: ignore
                 tenant_id=creds["tenant_id"],
                 client_id=creds["client_id"],
                 client_secret=creds["client_secret"]
@@ -52,8 +52,8 @@ class AzureProviderAdapter(CloudProviderAdapter):
             raise AuthenticationException("Azure credentials are not initialized.")
         try:
             # Validate credentials using the Subscription Client check
-            sub_client = SubscriptionClient(self._credential)
-            sub_client.subscriptions.get(self._subscription_id)
+            sub_client = SubscriptionClient(self._credential)  # type: ignore
+            sub_client.subscriptions.get(self._subscription_id or "")
             return True
         except Exception as e:
             raise AuthenticationException(f"Azure subscription check validation failed: {str(e)}")
@@ -70,7 +70,7 @@ class AzureProviderAdapter(CloudProviderAdapter):
         resources = []
         try:
             # Query compute VMs via resource management
-            compute_client = ComputeManagementClient(self._credential, self._subscription_id)
+            compute_client = ComputeManagementClient(self._credential, self._subscription_id or "")  # type: ignore
             vms = compute_client.virtual_machines.list_all()
             for vm in vms:
                 spec = {
@@ -86,8 +86,8 @@ class AzureProviderAdapter(CloudProviderAdapter):
                 
                 resources.append(
                     NormalizedResourceDTO(
-                        external_id=vm.id,
-                        name=vm.name,
+                        external_id=vm.id or "",
+                        name=vm.name or "",
                         resource_type="virtual_machine",
                         region=vm.location,
                         status="running",  # Fetch VM Instance View status if required
@@ -105,8 +105,8 @@ class AzureProviderAdapter(CloudProviderAdapter):
         if not self._credential:
             raise ProviderException("Azure credentials uninitialized.")
         try:
-            sub_client = SubscriptionClient(self._credential)
-            locations = sub_client.subscriptions.list_locations(self._subscription_id)
+            sub_client = SubscriptionClient(self._credential)  # type: ignore
+            locations = sub_client.subscriptions.list_locations(self._subscription_id or "")
             return [
                 {
                     "region_name": loc.name,
@@ -129,12 +129,12 @@ class AzureProviderAdapter(CloudProviderAdapter):
         if not self._credential:
             raise ProviderException("Azure credentials uninitialized.")
         try:
-            sub_client = SubscriptionClient(self._credential)
-            sub = sub_client.subscriptions.get(self._subscription_id)
+            sub_client = SubscriptionClient(self._credential)  # type: ignore
+            sub = sub_client.subscriptions.get(self._subscription_id or "")
             return {
                 "subscription_id": sub.subscription_id,
                 "display_name": sub.display_name,
-                "tenant_id": sub.tenant_id if hasattr(sub, "tenant_id") else None
+                "tenant_id": getattr(sub, "tenant_id", None)
             }
         except Exception as e:
             raise ProviderException(f"Failed to fetch Azure subscription info: {str(e)}")

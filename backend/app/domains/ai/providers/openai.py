@@ -45,7 +45,7 @@ class OpenAIProvider(LLMProvider):
         # Build message payload
         payload_messages = [{"role": "system", "content": system_prompt}]
         for msg in messages:
-            m = {"role": msg.role, "content": msg.content}
+            m: Dict[str, Any] = {"role": msg.role, "content": msg.content}
             if msg.tool_calls:
                 m["tool_calls"] = msg.tool_calls
             payload_messages.append(m)
