@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cloudpilot-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cloudpilot
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: cloudpilot-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cloudpilot-backend
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/cloudpilot
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=super_secret_jwt_sign_key_change_me_in_production_32_chars_or_more
+      - ENCRYPTION_KEY=SGVsbG9Xb3JsZFNlY3JldEtleUZvckNyeXB0b2dyYXBoeTMyQnl0ZXM=
+      - LOG_FORMAT=console
+      - LOG_LEVEL=debug
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cloudpilot-celery-worker
+    command: celery -A app.workers.celery_app worker --loglevel=info
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/cloudpilot
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=super_secret_jwt_sign_key_change_me_in_production_32_chars_or_more
+      - ENCRYPTION_KEY=SGVsbG9Xb3JsZFNlY3JldEtleUZvckNyeXB0b2dyYXBoeTMyQnl0ZXM=
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:

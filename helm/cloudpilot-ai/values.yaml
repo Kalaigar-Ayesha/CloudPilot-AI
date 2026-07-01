@@ -1,0 +1,28 @@
+replicaCount: 2
+
+backend:
+  image:
+    repository: cloudpilot-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    port: 8000
+
+frontend:
+  image:
+    repository: cloudpilot-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    port: 80
+    type: LoadBalancer
+
+postgres:
+  user: cloudpilot
+  password: SecretPassword123!
+  database: cloudpilot
+
+redis:
+  port: 6379
+
+encryptionKey: "3K2W4vN6l1X9aBcDeFgHiJkLmNoPqRsT"

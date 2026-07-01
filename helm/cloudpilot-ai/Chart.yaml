@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cloudpilot-ai
+description: A Production Helm chart for CloudPilot AI enterprise deployment platforms
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

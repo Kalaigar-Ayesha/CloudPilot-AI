@@ -1,0 +1,176 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudpilot-config
+  namespace: default
+data:
+  DATABASE_URL: "postgresql+asyncpg://cloudpilot:SecretPassword123!@cloudpilot-db:5432/cloudpilot"
+  REDIS_URL: "redis://cloudpilot-cache:6379/0"
+  ENCRYPTION_KEY: "3K2W4vN6l1X9aBcDeFgHiJkLmNoPqRsT"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudpilot-db
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudpilot-db
+  template:
+    metadata:
+      labels:
+        app: cloudpilot-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        env:
+        - name: POSTGRES_USER
+          value: "cloudpilot"
+        - name: POSTGRES_PASSWORD
+          value: "SecretPassword123!"
+        - name: POSTGRES_DB
+          value: "cloudpilot"
+        ports:
+        - containerPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudpilot-db
+  namespace: default
+spec:
+  ports:
+  - port: 5432
+  selector:
+    app: cloudpilot-db
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudpilot-cache
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudpilot-cache
+  template:
+    metadata:
+      labels:
+        app: cloudpilot-cache
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudpilot-cache
+  namespace: default
+spec:
+  ports:
+  - port: 6379
+  selector:
+    app: cloudpilot-cache
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudpilot-api
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cloudpilot-api
+  template:
+    metadata:
+      labels:
+        app: cloudpilot-api
+    spec:
+      containers:
+      - name: backend
+        image: cloudpilot-backend:latest
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: cloudpilot-config
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudpilot-api
+  namespace: default
+spec:
+  ports:
+  - port: 8000
+    targetPort: 8000
+  selector:
+    app: cloudpilot-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudpilot-worker
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudpilot-worker
+  template:
+    metadata:
+      labels:
+        app: cloudpilot-worker
+    spec:
+      containers:
+      - name: worker
+        image: cloudpilot-backend:latest
+        imagePullPolicy: IfNotPresent
+        command: ["celery", "-A", "app.workers.celery_app", "worker", "--loglevel=info"]
+        envFrom:
+        - configMapRef:
+            name: cloudpilot-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudpilot-ui
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cloudpilot-ui
+  template:
+    metadata:
+      labels:
+        app: cloudpilot-ui
+    spec:
+      containers:
+      - name: frontend
+        image: cloudpilot-frontend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudpilot-ui
+  namespace: default
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: cloudpilot-ui
