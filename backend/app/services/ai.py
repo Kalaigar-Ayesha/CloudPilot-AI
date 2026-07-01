@@ -8,6 +8,7 @@ from app.domains.ai.providers.base import LLMMessage, LLMResponse
 from app.domains.ai.providers.factory import LLMProviderFactory
 from app.domains.ai.tools.base import AIToolRegistry
 from app.domains.ai.prompts.templates import SYSTEM_PROMPTS
+from app.core.config import settings
 from app.exceptions.base import ValidationException, ProviderException
 from app.models.ai import Conversation, Message
 from app.repositories.ai import conversation_repository, message_repository
@@ -86,8 +87,27 @@ class AIService:
         try:
             provider_class = LLMProviderFactory.get_provider(provider_name)
             provider = provider_class()
-            # Configure using dummy settings for verification
-            provider.connect(api_key="mock_key", model_name="gpt-4o", settings={})
+            
+            # Resolve actual credentials from settings based on provider
+            api_key = "mock_key"
+            model_name = "gpt-4o"
+            settings_dict = {}
+            
+            clean_provider = provider_name.lower().strip()
+            if clean_provider == "openai":
+                api_key = settings.OPENAI_API_KEY
+                model_name = settings.OPENAI_MODEL_NAME
+            elif clean_provider == "gemini":
+                api_key = settings.GEMINI_API_KEY
+                model_name = settings.GEMINI_MODEL_NAME
+            elif clean_provider == "anthropic":
+                api_key = settings.ANTHROPIC_API_KEY
+                model_name = settings.ANTHROPIC_MODEL_NAME
+            elif clean_provider == "ollama":
+                model_name = settings.OLLAMA_MODEL_NAME
+                settings_dict = {"endpoint": settings.OLLAMA_ENDPOINT}
+                
+            provider.connect(api_key=api_key, model_name=model_name, settings=settings_dict)
         except Exception as e:
             raise ProviderException(f"LLM integration resolution failed: {str(e)}")
 
@@ -204,7 +224,11 @@ class AIService:
             # Resolve OpenAI fallback client
             provider_class = LLMProviderFactory.get_provider("openai")
             provider = provider_class()
-            provider.connect(api_key="mock_key", model_name="gpt-4o", settings={})
+            provider.connect(
+                api_key=settings.OPENAI_API_KEY,
+                model_name=settings.OPENAI_MODEL_NAME,
+                settings={}
+            )
             
             response = provider.chat(
                 messages=[LLMMessage(role="user", content=report_prompt)],

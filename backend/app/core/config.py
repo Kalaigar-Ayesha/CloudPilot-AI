@@ -33,6 +33,16 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     REDIS_URL: str
 
+    # AI LLM settings
+    OPENAI_API_KEY: str = "mock_key"
+    OPENAI_MODEL_NAME: str = "gpt-4o"
+    GEMINI_API_KEY: str = "mock_key"
+    GEMINI_MODEL_NAME: str = "gemini-1.5-pro"
+    ANTHROPIC_API_KEY: str = "mock_key"
+    ANTHROPIC_MODEL_NAME: str = "claude-3-5-sonnet"
+    OLLAMA_ENDPOINT: str = "http://localhost:11434"
+    OLLAMA_MODEL_NAME: str = "llama3"
+
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 100
     CHAT_LIMIT_PER_MINUTE: int = 20
