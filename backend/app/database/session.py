@@ -19,13 +19,16 @@ class DatabaseSessionManager:
     """
     def __init__(self, database_url: str):
         # Configure the Async Engine with appropriate pooling limits
-        self._engine = create_async_engine(
-            database_url,
-            pool_pre_ping=True,
-            pool_size=20,
-            max_overflow=10,
-            pool_recycle=1800,  # 30 minutes
-        )
+        if database_url.startswith("sqlite"):
+            self._engine = create_async_engine(database_url)
+        else:
+            self._engine = create_async_engine(
+                database_url,
+                pool_pre_ping=True,
+                pool_size=20,
+                max_overflow=10,
+                pool_recycle=1800,  # 30 minutes
+            )
         self._sessionmaker = async_sessionmaker(
             bind=self._engine,
             class_=AsyncSession,
